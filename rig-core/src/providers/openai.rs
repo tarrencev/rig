@@ -11,9 +11,9 @@
 use crate::{
     agent::AgentBuilder,
     completion::{self, CompletionError, CompletionRequest},
-    embeddings::{self, EmbeddingError},
+    embeddings::{self, EmbeddingError, EmbeddingsBuilder},
     extractor::ExtractorBuilder,
-    json_utils,
+    json_utils, Embed,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -121,8 +121,8 @@ impl Client {
     ///     .await
     ///     .expect("Failed to embed documents");
     /// ```
-    pub fn embeddings(&self, model: &str) -> embeddings::EmbeddingsBuilder<EmbeddingModel> {
-        embeddings::EmbeddingsBuilder::new(self.embedding_model(model))
+    pub fn embeddings<D: Embed>(&self, model: &str) -> EmbeddingsBuilder<EmbeddingModel, D> {
+        EmbeddingsBuilder::new(self.embedding_model(model))
     }
 
     /// Create a completion model with the given name.
@@ -249,7 +249,7 @@ impl embeddings::EmbeddingModel for EmbeddingModel {
         self.ndims
     }
 
-    async fn embed_documents(
+    async fn embed_texts(
         &self,
         documents: impl IntoIterator<Item = String>,
     ) -> Result<Vec<embeddings::Embedding>, EmbeddingError> {
